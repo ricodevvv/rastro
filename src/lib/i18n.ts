@@ -25,6 +25,7 @@ const en = {
     choose: "Choose files",
     formats: "Photos, PDF, Word, Excel, PowerPoint, audio and video",
     local: "Read on your device. Nothing leaves it.",
+    legal: "By using Rastro you accept the terms and the privacy notice.",
   },
   report: {
     reading: "Reading",
@@ -118,6 +119,7 @@ const es: Dictionary = {
     choose: "Elegir archivos",
     formats: "Fotos, PDF, Word, Excel, PowerPoint, audio y video",
     local: "Se leen en tu dispositivo. No salen de él.",
+    legal: "Al usar Rastro aceptas los términos y el aviso de privacidad.",
   },
   report: {
     reading: "Leyendo",

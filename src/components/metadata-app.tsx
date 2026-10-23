@@ -6,12 +6,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { cleanName, download, ReportView, type Entry } from "@/components/report-view";
 import { inspect } from "@/lib/inspect";
 import { strip } from "@/lib/strip";
-import { useDictionary } from "@/lib/use-dictionary";
+import Link from "next/link";
+import { useDictionary, useLocale } from "@/lib/use-dictionary";
 
 let counter = 0;
 
 export function MetadataApp() {
   const t = useDictionary();
+  const locale = useLocale();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -109,6 +111,11 @@ export function MetadataApp() {
           {t.drop.local}
         </p>
       </div>
+      <p className="mt-2 text-center text-[12px] text-secondary">
+        <Link href={`/${locale}/terms`} className="hover:underline">
+          {t.drop.legal}
+        </Link>
+      </p>
 
       {entries.length > 1 && (
         <div className="appear mt-4 flex flex-wrap items-center justify-center gap-3">

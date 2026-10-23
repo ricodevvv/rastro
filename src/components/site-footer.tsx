@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { AUTHOR_URL, getDictionary, GITHUB_URL, type Locale } from "@/lib/i18n";
+import { LEGAL } from "@/lib/legal";
 
 export function SiteFooter({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
@@ -11,7 +13,13 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             ricodevvv
           </a>
         </span>
-        <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-blue hover:underline sm:ml-auto">
+        <Link href={`/${locale}/privacy`} className="text-blue hover:underline sm:ml-auto">
+          {LEGAL.privacy[locale].title}
+        </Link>
+        <Link href={`/${locale}/terms`} className="text-blue hover:underline">
+          {LEGAL.terms[locale].title}
+        </Link>
+        <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-blue hover:underline">
           {t.footer.source}
         </a>
       </div>
