@@ -1,8 +1,25 @@
 "use client";
 
-import { ChevronRightIcon, DownloadIcon, MapPinIcon, XIcon } from "lucide-react";
+import {
+  AppWindowIcon,
+  BarcodeIcon,
+  Building2Icon,
+  CalendarIcon,
+  CheckIcon,
+  ChevronRightIcon,
+  DownloadIcon,
+  FileIcon,
+  HistoryIcon,
+  MapPinIcon,
+  MessageSquareTextIcon,
+  SearchIcon,
+  SmartphoneIcon,
+  UserIcon,
+  XIcon,
+  type LucideIcon,
+} from "lucide-react";
 import { useState } from "react";
-import { fieldCount, type Finding, type Group, type Report } from "@/lib/inspect/types";
+import { fieldCount, type Finding, type FindingCode, type Group, type Report } from "@/lib/inspect/types";
 import { cn } from "@/lib/utils";
 import { useDictionary } from "@/lib/use-dictionary";
 
@@ -14,11 +31,19 @@ export interface Entry {
   cleaning?: boolean;
 }
 
-const LEVEL_STYLES = {
-  high: "bg-danger-soft text-danger",
-  medium: "bg-warn-soft text-warn",
-  low: "bg-muted text-muted-foreground",
+const FINDING_ICONS: Record<FindingCode, { Icon: LucideIcon; color: string }> = {
+  location: { Icon: MapPinIcon, color: "bg-red" },
+  author: { Icon: UserIcon, color: "bg-orange" },
+  serial: { Icon: BarcodeIcon, color: "bg-purple" },
+  device: { Icon: SmartphoneIcon, color: "bg-blue" },
+  company: { Icon: Building2Icon, color: "bg-indigo" },
+  history: { Icon: HistoryIcon, color: "bg-yellow" },
+  software: { Icon: AppWindowIcon, color: "bg-teal" },
+  date: { Icon: CalendarIcon, color: "bg-green" },
+  comments: { Icon: MessageSquareTextIcon, color: "bg-gray" },
 };
+
+const LEVEL_TEXT = { high: "text-red", medium: "text-orange", low: "text-secondary" };
 
 export function download(file: Blob, name: string) {
   const url = URL.createObjectURL(file);
@@ -33,23 +58,48 @@ export function cleanName(name: string) {
   return name.replace(/(\.[^.]+)?$/, "-clean$1");
 }
 
+function Section({ title, footer, children }: { title?: React.ReactNode; footer?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section>
+      {title && <h3 className="mb-1.5 px-4 text-[13px] text-secondary">{title}</h3>}
+      <div className="inset-list overflow-hidden rounded-xl bg-cell">{children}</div>
+      {footer && <p className="mt-1.5 px-4 text-[13px] leading-snug text-secondary">{footer}</p>}
+    </section>
+  );
+}
+
 function Findings({ findings }: { findings: Finding[] }) {
   const t = useDictionary();
-  if (!findings.length) return <p className="text-sm text-muted-foreground">{t.report.noFindings}</p>;
+  if (!findings.length) {
+    return (
+      <Section>
+        <div className="flex items-center gap-3 px-4 py-3">
+          <span className="grid size-[30px] place-items-center rounded-[7px] bg-green text-white">
+            <CheckIcon className="size-[18px]" />
+          </span>
+          <span className="text-[17px]">{t.report.noFindings}</span>
+        </div>
+      </Section>
+    );
+  }
   return (
-    <ul className="flex flex-col gap-2">
-      {findings.map((finding, index) => (
-        <li key={finding.code} className="enter" style={{ "--delay": `${index * 60}ms` } as React.CSSProperties}>
-          <div className="flex items-start gap-3">
-            <span className={cn("mt-0.5 shrink-0 rounded-sm px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-wide uppercase", LEVEL_STYLES[finding.level])}>{t.levels[finding.level]}</span>
-            <div className="min-w-0">
-              <p className="text-sm font-medium">{t.findings[finding.code]}</p>
-              <p className="truncate font-mono text-xs text-muted-foreground">{finding.evidence.join(" · ")}</p>
+    <Section title={t.report.findingsTitle}>
+      {findings.map((finding, index) => {
+        const { Icon, color } = FINDING_ICONS[finding.code];
+        return (
+          <div key={finding.code} className="appear flex items-center gap-3 py-2.5 pr-4 pl-4 [--inset:58px]" style={{ "--delay": `${index * 50}ms` } as React.CSSProperties}>
+            <span className={cn("grid size-[30px] shrink-0 place-items-center rounded-[7px] text-white", color)}>
+              <Icon className="size-[18px]" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[17px] leading-tight">{t.findings[finding.code]}</p>
+              <p className="mt-0.5 truncate text-[13px] text-secondary">{finding.evidence.join(" · ")}</p>
             </div>
+            <span className={cn("shrink-0 text-[15px]", LEVEL_TEXT[finding.level])}>{t.levels[finding.level]}</span>
           </div>
-        </li>
-      ))}
-    </ul>
+        );
+      })}
+    </Section>
   );
 }
 
@@ -58,76 +108,85 @@ function MapBlock({ latitude, longitude }: { latitude: number; longitude: number
   const [open, setOpen] = useState(false);
   const bbox = [longitude - 0.008, latitude - 0.005, longitude + 0.008, latitude + 0.005].join(",");
   return (
-    <div className="rounded-md border border-danger/30 bg-danger-soft/50 p-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <MapPinIcon className="size-4 text-danger" />
-        <span className="font-mono text-sm">
-          {latitude.toFixed(6)}, {longitude.toFixed(6)}
-        </span>
-        <div className="ml-auto flex gap-3 text-sm">
-          {!open && (
-            <button type="button" onClick={() => setOpen(true)} className="font-medium text-danger underline-offset-4 hover:underline">
-              {t.report.map}
-            </button>
-          )}
-          <a
-            href={`https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=17/${latitude}/${longitude}`}
-            target="_blank"
-            rel="noreferrer"
-            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            {t.report.openMap}
-          </a>
-        </div>
-      </div>
-      {open ? (
+    <Section title={t.groups.location} footer={open ? undefined : t.report.mapNote}>
+      {open && (
         <iframe
           title="map"
-          className="enter mt-3 aspect-[16/9] w-full rounded-sm border"
+          className="appear aspect-[16/9] w-full border-0"
           src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${latitude},${longitude}`}
         />
-      ) : (
-        <p className="mt-2 text-xs text-muted-foreground">{t.report.mapNote}</p>
       )}
-    </div>
+      <div className="flex items-center gap-3 px-4 py-3">
+        <span className="grid size-[30px] shrink-0 place-items-center rounded-[7px] bg-red text-white">
+          <MapPinIcon className="size-[18px]" />
+        </span>
+        <span className="min-w-0 flex-1 font-mono text-[15px]">
+          {latitude.toFixed(5)}, {longitude.toFixed(5)}
+        </span>
+        {!open && (
+          <button type="button" onClick={() => setOpen(true)} className="spring text-[17px] text-blue">
+            {t.report.map}
+          </button>
+        )}
+      </div>
+      <a
+        href={`https://maps.apple.com/?ll=${latitude},${longitude}&q=${latitude},${longitude}`}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center justify-between px-4 py-3 text-[17px] text-blue [--inset:16px] hover:bg-fill"
+      >
+        {t.report.openMap}
+        <ChevronRightIcon className="size-4 text-tertiary" />
+      </a>
+    </Section>
   );
 }
 
 function Groups({ groups }: { groups: Group[] }) {
   const t = useDictionary();
   const [query, setQuery] = useState("");
+  const [closed, setClosed] = useState<Record<string, boolean>>({ icc: true, other: true });
   const wanted = query.trim().toLowerCase();
   const labels = t.file as Record<string, string>;
   return (
-    <div className="flex flex-col gap-3">
-      <input
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={t.report.filter}
-        aria-label={t.report.filter}
-        className="h-9 w-full rounded-md border bg-surface px-3 text-sm outline-none focus-visible:border-accent"
-      />
+    <div className="flex flex-col gap-6">
+      <label className="flex h-9 items-center gap-2 rounded-[10px] bg-fill px-2.5">
+        <SearchIcon className="size-4 text-secondary" />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t.report.filter}
+          aria-label={t.report.filter}
+          className="h-full flex-1 bg-transparent text-[17px] outline-none placeholder:text-secondary"
+        />
+      </label>
       {groups.map((group) => {
         const fields = group.fields.filter((field) => !wanted || `${field.key} ${field.value}`.toLowerCase().includes(wanted));
         if (!fields.length) return null;
+        const isClosed = closed[group.id] && !wanted;
         return (
-          <details key={group.id} open={group.id !== "icc" && group.id !== "other"} className="group/details border-t pt-3">
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-medium tracking-wider text-muted-foreground uppercase select-none">
-              <ChevronRightIcon className="size-3.5 transition-transform group-open/details:rotate-90" />
+          <section key={group.id}>
+            <button
+              type="button"
+              onClick={() => setClosed({ ...closed, [group.id]: !isClosed })}
+              aria-expanded={!isClosed}
+              className="mb-1.5 flex w-full items-center gap-1 px-4 text-left text-[13px] text-secondary"
+            >
               {t.groups[group.id]}
-              <span className="font-mono font-normal normal-case">{fields.length}</span>
-            </summary>
-            <dl className="mt-2">
-              {fields.map((field, index) => (
-                <div key={`${field.key}-${index}`} className="grid grid-cols-[minmax(0,12rem)_1fr] gap-4 py-1.5 text-sm max-sm:grid-cols-1 max-sm:gap-0.5">
-                  <dt className="truncate text-muted-foreground" title={field.key}>
-                    {group.id === "file" ? labels[field.key] : field.key}
-                  </dt>
-                  <dd className="min-w-0 font-mono text-[13px] break-words">{field.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </details>
+              <span className="text-tertiary">· {fields.length}</span>
+              <ChevronRightIcon className={cn("ml-auto size-3.5 text-blue transition-transform duration-300", !isClosed && "rotate-90")} />
+            </button>
+            {!isClosed && (
+              <dl className="inset-list overflow-hidden rounded-xl bg-cell">
+                {fields.map((field, index) => (
+                  <div key={`${field.key}-${index}`} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5 px-4 py-[11px]">
+                    <dt className="shrink-0 text-[15px]">{group.id === "file" ? labels[field.key] : field.key}</dt>
+                    <dd className="min-w-0 text-right text-[15px] break-words text-secondary sm:max-w-[60%]">{field.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </section>
         );
       })}
     </div>
@@ -158,41 +217,43 @@ export function ReportView({ entry, onClean, onRemove }: { entry: Entry; onClean
   const leftover = cleaned?.report.findings.filter((finding) => finding.level !== "low") ?? [];
 
   return (
-    <article className="enter border-t pt-8">
-      <header className="flex items-start gap-3">
+    <article className="appear flex flex-col gap-6 pt-4">
+      <header className="flex items-center gap-3 rounded-2xl bg-cell px-4 py-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-[10px] bg-fill text-secondary">
+          <FileIcon className="size-5" />
+        </span>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate font-mono text-base font-medium">{file.name}</h2>
-          {report && !report.error && (
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {before} {t.report.fields}
-            </p>
-          )}
+          <h2 className="truncate text-[17px] font-semibold">{file.name}</h2>
+          <p className="text-[13px] text-secondary">
+            {report && !report.error ? `${before} ${t.report.fields}` : `${t.report.reading}…`}
+          </p>
         </div>
-        <button type="button" onClick={onRemove} aria-label={t.report.remove} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+        <button type="button" onClick={onRemove} aria-label={t.report.remove} className="spring grid size-8 place-items-center rounded-full bg-fill text-secondary">
           <XIcon className="size-4" />
         </button>
       </header>
 
       {!report ? (
-        <div className="relative mt-5 h-24 overflow-hidden rounded-md border bg-surface">
-          <div className="scanline absolute inset-x-0 h-6 bg-gradient-to-b from-transparent via-accent-soft to-transparent" />
-          <p className="absolute inset-0 grid place-items-center font-mono text-sm text-muted-foreground">{t.report.reading}…</p>
+        <div className="relative h-20 overflow-hidden rounded-xl bg-cell">
+          <div className="sweep absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-blue-tint to-transparent" />
         </div>
       ) : report.error ? (
-        <p className="mt-4 text-sm text-danger">{report.error === "encrypted" ? t.report.encrypted : t.report.error}</p>
+        <Section>
+          <p className="px-4 py-3 text-[15px] text-red">{report.error === "encrypted" ? t.report.encrypted : t.report.error}</p>
+        </Section>
       ) : (
-        <div className="mt-5 flex flex-col gap-6">
+        <>
           {report.gps && <MapBlock {...report.gps} />}
           <Findings findings={report.findings} />
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
             {cleaned ? (
               <button
                 type="button"
                 onClick={() => download(cleaned.file, cleanName(file.name))}
-                className="inline-flex h-10 items-center gap-2 rounded-md bg-accent px-4 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:text-background"
+                className="spring inline-flex h-12 items-center justify-center gap-2 rounded-full bg-blue px-6 text-[17px] font-medium text-white hover:opacity-90"
               >
-                <DownloadIcon className="size-4" />
+                <DownloadIcon className="size-[18px]" />
                 {t.report.download}
               </button>
             ) : report.cleanable ? (
@@ -200,33 +261,42 @@ export function ReportView({ entry, onClean, onRemove }: { entry: Entry; onClean
                 type="button"
                 onClick={onClean}
                 disabled={entry.cleaning}
-                className="inline-flex h-10 items-center gap-2 rounded-md bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="spring inline-flex h-12 items-center justify-center rounded-full bg-blue px-6 text-[17px] font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
                 {entry.cleaning ? `${t.report.cleaning}…` : t.report.clean}
               </button>
             ) : (
-              <p className="text-sm text-muted-foreground">{t.report.noClean}</p>
+              <p className="px-4 text-[13px] text-secondary">{t.report.noClean}</p>
             )}
             <button
               type="button"
               onClick={() => download(new Blob([toJson(report)], { type: "application/json" }), `${file.name}.metadata.json`)}
-              className="inline-flex h-10 items-center rounded-md border px-3 font-mono text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="spring inline-flex h-12 items-center justify-center rounded-full bg-blue-tint px-5 text-[17px] font-medium text-blue"
             >
               {t.report.json}
             </button>
           </div>
 
           {cleaned && (
-            <div className="enter rounded-md border border-accent/30 bg-accent-soft p-4 text-sm">
-              <p>
-                <span className="font-mono font-medium text-accent">−{Math.max(0, before - after)}</span> {t.report.removed}.{" "}
-                {leftover.length ? `${t.report.leftover}: ${leftover.map((finding) => t.findings[finding.code]).join(", ")}.` : t.report.nothingLeft}
-              </p>
-            </div>
+            <Section>
+              <div className="appear flex items-center gap-3 px-4 py-3">
+                <span className="grid size-[30px] shrink-0 place-items-center rounded-[7px] bg-green text-white">
+                  <CheckIcon className="size-[18px]" />
+                </span>
+                <p className="text-[15px]">
+                  <span className="font-semibold">
+                    {Math.max(0, before - after)} {t.report.removed}.
+                  </span>{" "}
+                  <span className="text-secondary">
+                    {leftover.length ? `${t.report.leftover}: ${leftover.map((finding) => t.findings[finding.code]).join(", ")}.` : t.report.nothingLeft}
+                  </span>
+                </p>
+              </div>
+            </Section>
           )}
 
           <Groups groups={report.groups} />
-        </div>
+        </>
       )}
     </article>
   );

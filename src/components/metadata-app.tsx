@@ -1,6 +1,7 @@
 "use client";
 
 import { zipSync } from "fflate";
+import { FileSearchIcon, LockIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cleanName, download, ReportView, type Entry } from "@/components/report-view";
 import { inspect } from "@/lib/inspect";
@@ -89,34 +90,40 @@ export function MetadataApp() {
           event.target.value = "";
         }}
       />
-      <button
-        type="button"
-        onClick={() => input.current?.click()}
+      <div
         data-dragging={dragging}
-        className="group flex w-full flex-col items-start gap-1 rounded-md border border-dashed bg-surface px-6 py-10 text-left transition-colors hover:border-foreground/40 data-[dragging=true]:border-accent data-[dragging=true]:bg-accent-soft"
+        className="flex flex-col items-center gap-4 rounded-2xl bg-cell px-6 py-12 text-center transition-all duration-300 data-[dragging=true]:scale-[1.01] data-[dragging=true]:bg-blue-tint data-[dragging=true]:ring-2 data-[dragging=true]:ring-blue"
       >
-        <span className="text-lg font-medium">
-          {t.drop.title} <span className="text-muted-foreground">{t.drop.or}</span>{" "}
-          <span className="text-accent underline decoration-accent/40 underline-offset-4 group-hover:decoration-accent">{t.drop.choose}</span>
+        <span className="grid size-14 place-items-center rounded-full bg-blue-tint text-blue">
+          <FileSearchIcon className="size-7" />
         </span>
-        <span className="text-sm text-muted-foreground">{t.drop.formats}</span>
-        <span className="mt-3 font-mono text-xs text-muted-foreground">↳ {t.drop.local}</span>
-      </button>
+        <div>
+          <p className="text-[20px] font-semibold tracking-[-0.02em]">{t.drop.title}</p>
+          <p className="mt-1 text-[15px] text-secondary">{t.drop.formats}</p>
+        </div>
+        <button type="button" onClick={() => input.current?.click()} className="spring h-11 rounded-full bg-blue px-6 text-[17px] font-medium text-white hover:opacity-90">
+          {t.drop.choose}
+        </button>
+        <p className="flex items-center gap-1.5 text-[13px] text-secondary">
+          <LockIcon className="size-3.5" />
+          {t.drop.local}
+        </p>
+      </div>
 
       {entries.length > 1 && (
-        <div className="enter mt-6 flex flex-wrap items-center gap-3">
+        <div className="appear mt-4 flex flex-wrap items-center justify-center gap-3">
           {cleanable > 1 && (
-            <button type="button" onClick={cleanAll} className="inline-flex h-9 items-center rounded-md bg-foreground px-3.5 text-sm font-medium text-background hover:opacity-90">
+            <button type="button" onClick={cleanAll} className="spring h-9 rounded-full bg-blue-tint px-4 text-[15px] font-medium text-blue">
               {t.report.downloadAll}
             </button>
           )}
-          <button type="button" onClick={() => setEntries([])} className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+          <button type="button" onClick={() => setEntries([])} className="spring h-9 rounded-full px-3 text-[15px] text-blue hover:bg-fill">
             {t.report.clear}
           </button>
         </div>
       )}
 
-      <div className="mt-10 flex flex-col gap-10">
+      <div className="mt-6 flex flex-col gap-6">
         {entries.map((entry) => (
           <ReportView key={entry.id} entry={entry} onClean={() => clean(entry)} onRemove={() => setEntries((current) => current.filter((item) => item.id !== entry.id))} />
         ))}

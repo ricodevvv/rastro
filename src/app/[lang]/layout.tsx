@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -7,8 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { getDictionary, isLocale, LOCALES } from "@/lib/i18n";
 import "../globals.css";
 
-const sans = IBM_Plex_Sans({ variable: "--font-plex-sans", subsets: ["latin"], weight: ["400", "500", "600"] });
-const mono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500", "600"] });
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export function generateStaticParams() {
   return LOCALES.map((lang) => ({ lang }));
@@ -34,11 +33,11 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   return (
-    <html lang={lang === "es" ? "es-MX" : "en"} suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
+    <html lang={lang === "es" ? "es-MX" : "en"} suppressHydrationWarning className={inter.variable}>
       <body className="flex min-h-dvh flex-col">
         <ThemeProvider>
           <SiteHeader locale={lang} />
-          <main className="mx-auto w-full max-w-3xl flex-1 px-5">{children}</main>
+          <main className="mx-auto w-full max-w-3xl flex-1 px-4">{children}</main>
           <SiteFooter locale={lang} />
         </ThemeProvider>
       </body>

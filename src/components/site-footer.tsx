@@ -1,20 +1,20 @@
 import { AUTHOR_URL, getDictionary, GITHUB_URL, type Locale } from "@/lib/i18n";
-import { Wordmark } from "@/components/wordmark";
 
 export function SiteFooter({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   return (
-    <footer className="mx-auto mt-24 flex w-full max-w-3xl flex-wrap items-center gap-x-6 gap-y-2 border-t px-5 py-8 text-sm text-muted-foreground">
-      <Wordmark className="text-foreground" />
-      <span>
-        {t.footer.made}{" "}
-        <a href={AUTHOR_URL} target="_blank" rel="noreferrer" className="text-foreground underline-offset-4 hover:underline">
-          ricodevvv
+    <footer className="mx-auto mt-20 w-full max-w-3xl px-4 pb-10">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t-[0.5px] pt-5 text-xs text-secondary">
+        <span>
+          {t.footer.made}{" "}
+          <a href={AUTHOR_URL} target="_blank" rel="noreferrer" className="text-blue hover:underline">
+            ricodevvv
+          </a>
+        </span>
+        <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-blue hover:underline sm:ml-auto">
+          {t.footer.source}
         </a>
-      </span>
-      <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="underline-offset-4 hover:text-foreground hover:underline sm:ml-auto">
-        {t.footer.source}
-      </a>
+      </div>
     </footer>
   );
 }
